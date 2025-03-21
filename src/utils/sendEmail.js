@@ -5,8 +5,8 @@ const sendEmail = async (email, subject, message) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER, // আপনার জিমেইল
-        pass: process.env.EMAIL_PASS, // অ্যাপ পাসওয়ার্ড
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
@@ -18,9 +18,9 @@ const sendEmail = async (email, subject, message) => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log("✅ Email sent successfully");
+    console.log("Email sent successfully");
   } catch (error) {
-    console.log("❌ Email sending failed:", error);
+    console.log("Email sending failed:", error);
   }
 };
 
