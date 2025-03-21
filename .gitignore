@@ -25,3 +25,6 @@ Thumbs.db
 
 # Uploaded files (if needed)
 src/uploads/
+
+# firebase 
+/config/serviceAccountKey.json

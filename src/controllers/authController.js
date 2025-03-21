@@ -80,3 +80,35 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ message: "Error resetting password", error });
   }
 };
+
+//google login... Google ID Token Verify API
+const admin = require("../utils/firebaseAdmin");
+const jwt = require("jsonwebtoken");
+
+exports.googleLogin = async (req, res) => {
+  try {
+    const { idToken } = req.body; // get ID Token from Frontend
+
+    // Google ID Token Verify
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const { email, name, picture, uid } = decodedToken;
+
+    // find database user
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // if new user will be insert database
+      user = new User({ name, email, googleId: uid });
+      await user.save();
+    }
+
+    // Custom JWT Token Generate
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    res.status(200).json({ message: "Google Login Successful", token, user });
+  } catch (error) {
+    res.status(500).json({ message: "Google Login Failed", error });
+  }
+};
