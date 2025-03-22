@@ -24,7 +24,9 @@ Thumbs.db
 *.swp
 
 # Uploaded files (if needed)
-src/uploads/
+/uploads/
 
 # firebase 
-/config/serviceAccountKey.json
+# Ignore Google Cloud Service Key
+src/config/serviceAccountKey.json
+
