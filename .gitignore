@@ -26,7 +26,6 @@ Thumbs.db
 # Uploaded files (if needed)
 /uploads/
 
-# firebase 
 # Ignore Google Cloud Service Key
 src/config/serviceAccountKey.json
 
