@@ -2,6 +2,10 @@ const express = require("express");
 const cors = require("cors");
 const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
+const folderRoutes = require("./routes/folderRoutes");
+const noteRoutes = require("./routes/noteRoutes");
+const imageRoutes = require("./routes/imageRoutes");
+const pdfRoutes = require("./routes/pdfRoutes");
 
 const app = express();
 
@@ -12,6 +16,10 @@ app.use(express.json());
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/users", authRoutes);
+app.use("/api/folders", folderRoutes);
+app.use("/api/notes", noteRoutes);
+app.use("/api/images", imageRoutes);
+app.use("/api/pdfs", pdfRoutes);
 
 // Default Route
 app.get("/", (req, res) => {
