@@ -21,7 +21,7 @@ exports.createFolder = async (req, res) => {
   }
 };
 
-// 📌 get user folders list API
+// get user folders list API
 exports.getUserFolders = async (req, res) => {
   try {
     const userId = req.user.id;

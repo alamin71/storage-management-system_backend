@@ -104,7 +104,7 @@ exports.googleLogin = async (req, res) => {
 
     // Custom JWT Token Generate
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "6h",
     });
 
     res.status(200).json({ message: "Google Login Successful", token, user });
