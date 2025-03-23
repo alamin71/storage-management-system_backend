@@ -3,7 +3,6 @@ const Folder = require("../models/folderModel");
 const Note = require("../models/noteModel");
 const Image = require("../models/imageModel");
 const Pdf = require("../models/pdfModel");
-const bcrypt = require("bcryptjs");
 
 exports.getUserFiles = async (req, res) => {
   try {
@@ -325,7 +324,7 @@ exports.getFavoriteFiles = async (req, res) => {
   }
 };
 
-// ✅ Lock File API (with hashed PIN)
+//  Lock File API
 exports.lockFile = async (req, res) => {
   try {
     let { fileId, fileType, lockPin } = req.body;
@@ -363,10 +362,9 @@ exports.lockFile = async (req, res) => {
     let file = await Model.findById(fileId);
     if (!file) return res.status(404).json({ message: "File not found" });
 
-    // ✅ Hash PIN & Save
-    const hashedPin = await bcrypt.hash(lockPin.toString(), 10);
+    // Save PIN directly
     file.isLocked = true;
-    file.lockPin = hashedPin;
+    file.lockPin = lockPin; // Save the 4-digit PIN directly
     await file.save();
 
     res.status(200).json({ message: "File locked successfully" });
@@ -375,7 +373,7 @@ exports.lockFile = async (req, res) => {
   }
 };
 
-// ✅ Unlock File API (with hashed PIN check)
+// Unlock File API
 exports.unlockFile = async (req, res) => {
   try {
     let { fileId, fileType, lockPin } = req.body;
@@ -413,18 +411,17 @@ exports.unlockFile = async (req, res) => {
     let file = await Model.findById(fileId).select("+lockPin");
     if (!file) return res.status(404).json({ message: "File not found" });
 
-    // ✅ Check if file is locked
+    // Check if file is locked
     if (!file.isLocked || !file.lockPin) {
       return res.status(400).json({ message: "This file is not locked" });
     }
 
-    // ✅ Compare Hashed PIN
-    const isMatch = await bcrypt.compare(lockPin.toString(), file.lockPin);
-    if (!isMatch) {
+    // Compare PIN directly
+    if (lockPin !== file.lockPin) {
       return res.status(401).json({ message: "Incorrect PIN" });
     }
 
-    // ✅ Unlock File
+    // Unlock File
     file.isLocked = false;
     file.lockPin = null;
     await file.save();

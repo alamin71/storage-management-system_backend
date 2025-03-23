@@ -29,7 +29,7 @@ const noteSchema = new mongoose.Schema(
       minlength: 4,
       maxlength: 4,
       default: null,
-      select: false, // Query করলে দেখাবে না
+      select: false, // do Query not show
     },
   },
   { timestamps: true }
