@@ -6,6 +6,9 @@ const folderRoutes = require("./routes/folderRoutes");
 const noteRoutes = require("./routes/noteRoutes");
 const imageRoutes = require("./routes/imageRoutes");
 const pdfRoutes = require("./routes/pdfRoutes");
+const fileRoutes = require("./routes/fileRoutes");
+
+const storageRoutes = require("./routes/storageRoutes");
 
 const app = express();
 
@@ -29,7 +32,8 @@ app.use("/api/folders", folderRoutes);
 app.use("/api/notes", noteRoutes);
 app.use("/api/images", imageRoutes);
 app.use("/api/pdfs", pdfRoutes);
-
+app.use("/api/files", fileRoutes);
+app.use("/api/storage", storageRoutes);
 // Default Route
 app.get("/", (req, res) => {
   res.send("Storage Management System is Running!");
