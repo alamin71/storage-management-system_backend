@@ -7,24 +7,30 @@ const folderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-    }, // connect with user
+    }, // Connect with User
+
     parentFolder: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Folder",
       default: null,
-    }, // support sub folder
-    password: { type: String, required: false },
+    }, // Support sub-folder
+
     isFavorite: {
       type: Boolean,
       default: false,
     },
+
     isLocked: {
       type: Boolean,
       default: false,
     },
-    lockPassword: {
-      type: String,
+
+    lockPin: {
+      type: Number,
+      minlength: 4,
+      maxlength: 4,
       default: null,
+      select: false, // Query করলে দেখাবে না
     },
   },
   { timestamps: true }

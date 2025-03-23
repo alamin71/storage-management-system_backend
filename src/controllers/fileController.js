@@ -325,13 +325,19 @@ exports.getFavoriteFiles = async (req, res) => {
   }
 };
 
-//Lock API
+// ✅ Lock File API (with hashed PIN)
 exports.lockFile = async (req, res) => {
   try {
-    let { fileId, fileType, password } = req.body;
+    let { fileId, fileType, lockPin } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(fileId)) {
       return res.status(400).json({ message: "Invalid file ID format" });
+    }
+
+    if (!lockPin || lockPin.toString().length !== 4) {
+      return res
+        .status(400)
+        .json({ message: "Lock PIN must be a 4-digit number" });
     }
 
     fileId = new mongoose.Types.ObjectId(fileId);
@@ -357,9 +363,10 @@ exports.lockFile = async (req, res) => {
     let file = await Model.findById(fileId);
     if (!file) return res.status(404).json({ message: "File not found" });
 
-    // ✅ Hash Password & Save
-    const hashedPassword = await bcrypt.hash(password, 10);
-    file.password = hashedPassword;
+    // ✅ Hash PIN & Save
+    const hashedPin = await bcrypt.hash(lockPin.toString(), 10);
+    file.isLocked = true;
+    file.lockPin = hashedPin;
     await file.save();
 
     res.status(200).json({ message: "File locked successfully" });
@@ -367,13 +374,20 @@ exports.lockFile = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-//unlock API
+
+// ✅ Unlock File API (with hashed PIN check)
 exports.unlockFile = async (req, res) => {
   try {
-    let { fileId, fileType, password } = req.body;
+    let { fileId, fileType, lockPin } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(fileId)) {
       return res.status(400).json({ message: "Invalid file ID format" });
+    }
+
+    if (!lockPin || lockPin.toString().length !== 4) {
+      return res
+        .status(400)
+        .json({ message: "Unlock PIN must be a 4-digit number" });
     }
 
     fileId = new mongoose.Types.ObjectId(fileId);
@@ -396,22 +410,24 @@ exports.unlockFile = async (req, res) => {
         return res.status(400).json({ message: "Invalid file type" });
     }
 
-    let file = await Model.findById(fileId);
+    let file = await Model.findById(fileId).select("+lockPin");
     if (!file) return res.status(404).json({ message: "File not found" });
 
-    console.log("Received Password:", password);
-    console.log("Stored Password:", file.password);
-
-    // ✅ Check if file has a password
-    if (!file.password) {
+    // ✅ Check if file is locked
+    if (!file.isLocked || !file.lockPin) {
       return res.status(400).json({ message: "This file is not locked" });
     }
 
-    // ✅ Compare Hashed Password
-    const isMatch = await bcrypt.compare(password, file.password);
+    // ✅ Compare Hashed PIN
+    const isMatch = await bcrypt.compare(lockPin.toString(), file.lockPin);
     if (!isMatch) {
-      return res.status(401).json({ message: "Incorrect password" });
+      return res.status(401).json({ message: "Incorrect PIN" });
     }
+
+    // ✅ Unlock File
+    file.isLocked = false;
+    file.lockPin = null;
+    await file.save();
 
     res.status(200).json({ message: "File unlocked successfully" });
   } catch (error) {

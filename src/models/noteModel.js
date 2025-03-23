@@ -19,14 +19,17 @@ const noteSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    password: { type: String, required: false },
     isLocked: {
       type: Boolean,
       default: false,
     },
-    lockPassword: {
-      type: String,
+
+    lockPin: {
+      type: Number,
+      minlength: 4,
+      maxlength: 4,
       default: null,
+      select: false, // Query করলে দেখাবে না
     },
   },
   { timestamps: true }
