@@ -13,6 +13,7 @@ const folderSchema = new mongoose.Schema(
       ref: "Folder",
       default: null,
     }, // support sub folder
+    password: { type: String, required: false },
     isFavorite: {
       type: Boolean,
       default: false,

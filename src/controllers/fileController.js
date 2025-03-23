@@ -328,7 +328,13 @@ exports.getFavoriteFiles = async (req, res) => {
 //Lock API
 exports.lockFile = async (req, res) => {
   try {
-    const { fileId, fileType, password } = req.body;
+    let { fileId, fileType, password } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+      return res.status(400).json({ message: "Invalid file ID format" });
+    }
+
+    fileId = new mongoose.Types.ObjectId(fileId);
 
     let Model;
     switch (fileType) {
@@ -351,8 +357,9 @@ exports.lockFile = async (req, res) => {
     let file = await Model.findById(fileId);
     if (!file) return res.status(404).json({ message: "File not found" });
 
-    file.isLocked = true;
-    file.lockPassword = password;
+    // ✅ Hash Password & Save
+    const hashedPassword = await bcrypt.hash(password, 10);
+    file.password = hashedPassword;
     await file.save();
 
     res.status(200).json({ message: "File locked successfully" });
@@ -392,7 +399,15 @@ exports.unlockFile = async (req, res) => {
     let file = await Model.findById(fileId);
     if (!file) return res.status(404).json({ message: "File not found" });
 
-    // Password Check Logic
+    console.log("Received Password:", password);
+    console.log("Stored Password:", file.password);
+
+    // ✅ Check if file has a password
+    if (!file.password) {
+      return res.status(400).json({ message: "This file is not locked" });
+    }
+
+    // ✅ Compare Hashed Password
     const isMatch = await bcrypt.compare(password, file.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Incorrect password" });

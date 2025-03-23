@@ -19,6 +19,7 @@ const noteSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    password: { type: String, required: false },
     isLocked: {
       type: Boolean,
       default: false,
