@@ -27,6 +27,10 @@ const imageSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    isFavorite: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

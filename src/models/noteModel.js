@@ -15,6 +15,10 @@ const noteSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    isFavorite: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

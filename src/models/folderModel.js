@@ -13,6 +13,10 @@ const folderSchema = new mongoose.Schema(
       ref: "Folder",
       default: null,
     }, // support sub folder
+    isFavorite: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

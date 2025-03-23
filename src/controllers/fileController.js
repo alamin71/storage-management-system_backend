@@ -121,17 +121,96 @@ exports.getRecentFiles = async (req, res) => {
 //     res.status(500).json({ message: "Server error", error: error.message });
 //   }
 // };
+// exports.fileAction = async (req, res) => {
+//   try {
+//     let { fileId, fileType, action, newName, destinationFolderId } = req.body;
+
+//     // Check if fileId is a valid ObjectId
+//     if (!mongoose.Types.ObjectId.isValid(fileId)) {
+//       return res.status(400).json({ message: "Invalid file ID format" });
+//     }
+
+//     // Convert fileId to ObjectId
+//     fileId = new mongoose.Types.ObjectId(fileId);
+
+//     let Model;
+//     switch (fileType) {
+//       case "folder":
+//         Model = Folder;
+//         break;
+//       case "note":
+//         Model = Note;
+//         break;
+//       case "image":
+//         Model = Image;
+//         break;
+//       case "pdf":
+//         Model = Pdf;
+//         break;
+//       default:
+//         return res.status(400).json({ message: "Invalid file type" });
+//     }
+
+//     let file = await Model.findById(fileId);
+//     if (!file) return res.status(404).json({ message: "File not found" });
+
+//     switch (action) {
+//       case "delete":
+//         await Model.findByIdAndDelete(fileId);
+//         return res.status(200).json({ message: "File deleted successfully" });
+
+//       case "rename":
+//         if (fileType === "folder" || fileType === "note") {
+//           file.name = newName;
+//         } else {
+//           file.filename = newName;
+//         }
+//         await file.save();
+//         return res.status(200).json({ message: "File renamed successfully" });
+
+//       case "copy":
+//         const copiedFile = new Model({ ...file.toObject(), _id: undefined });
+//         await copiedFile.save();
+//         return res.status(200).json({ message: "File copied successfully" });
+
+//       case "move":
+//         if (!mongoose.Types.ObjectId.isValid(destinationFolderId)) {
+//           return res
+//             .status(400)
+//             .json({ message: "Invalid destination folder ID" });
+//         }
+//         file.parentFolder = new mongoose.Types.ObjectId(destinationFolderId);
+//         await file.save();
+//         return res.status(200).json({ message: "File moved successfully" });
+
+//       case "duplicate":
+//         const duplicateFile = new Model({
+//           ...file.toObject(),
+//           _id: undefined,
+//           filename: file.filename ? file.filename + " (copy)" : undefined,
+//           name: file.name ? file.name + " (copy)" : undefined,
+//         });
+//         await duplicateFile.save();
+//         return res
+//           .status(200)
+//           .json({ message: "File duplicated successfully" });
+
+//       default:
+//         return res.status(400).json({ message: "Invalid action" });
+//     }
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
+
 exports.fileAction = async (req, res) => {
   try {
     let { fileId, fileType, action, newName, destinationFolderId } = req.body;
 
-    // Check if fileId is a valid ObjectId
+    // Check if fileId is valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(fileId)) {
       return res.status(400).json({ message: "Invalid file ID format" });
     }
-
-    // Convert fileId to ObjectId
-    fileId = new mongoose.Types.ObjectId(fileId);
 
     let Model;
     switch (fileType) {
@@ -160,6 +239,9 @@ exports.fileAction = async (req, res) => {
         return res.status(200).json({ message: "File deleted successfully" });
 
       case "rename":
+        if (!newName) {
+          return res.status(400).json({ message: "New name is required" });
+        }
         if (fileType === "folder" || fileType === "note") {
           file.name = newName;
         } else {
@@ -169,7 +251,12 @@ exports.fileAction = async (req, res) => {
         return res.status(200).json({ message: "File renamed successfully" });
 
       case "copy":
-        const copiedFile = new Model({ ...file.toObject(), _id: undefined });
+        const copiedFile = new Model({
+          ...file.toObject(),
+          _id: new mongoose.Types.ObjectId(),
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
         await copiedFile.save();
         return res.status(200).json({ message: "File copied successfully" });
 
@@ -186,18 +273,52 @@ exports.fileAction = async (req, res) => {
       case "duplicate":
         const duplicateFile = new Model({
           ...file.toObject(),
-          _id: undefined,
+          _id: new mongoose.Types.ObjectId(),
           filename: file.filename ? file.filename + " (copy)" : undefined,
           name: file.name ? file.name + " (copy)" : undefined,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
         });
         await duplicateFile.save();
         return res
           .status(200)
           .json({ message: "File duplicated successfully" });
 
+      case "favorite":
+        file.isFavorite = !file.isFavorite;
+        await file.save();
+        return res.status(200).json({
+          message: `File ${
+            file.isFavorite ? "favorited" : "unfavorited"
+          } successfully`,
+        });
+
       default:
         return res.status(400).json({ message: "Invalid action" });
     }
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+//favourte listing api
+exports.getFavoriteFiles = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const favoriteFolders = await Folder.find({ userId, isFavorite: true });
+    const favoriteNotes = await Note.find({ userId, isFavorite: true });
+    const favoriteImages = await Image.find({ userId, isFavorite: true });
+    const favoritePdfs = await Pdf.find({ userId, isFavorite: true });
+
+    res.status(200).json({
+      favoriteFiles: [
+        ...favoriteFolders,
+        ...favoriteNotes,
+        ...favoriteImages,
+        ...favoritePdfs,
+      ],
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
