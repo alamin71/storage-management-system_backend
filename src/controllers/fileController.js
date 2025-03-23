@@ -57,9 +57,80 @@ exports.getRecentFiles = async (req, res) => {
 };
 
 //File Action API (Delete, Copy, Rename, Move, Duplicate)
+// exports.fileAction = async (req, res) => {
+//   try {
+//     const { fileId, fileType, action, newName, destinationFolderId } = req.body;
+
+//     let Model;
+//     switch (fileType) {
+//       case "folder":
+//         Model = Folder;
+//         break;
+//       case "note":
+//         Model = Note;
+//         break;
+//       case "image":
+//         Model = Image;
+//         break;
+//       case "pdf":
+//         Model = Pdf;
+//         break;
+//       default:
+//         return res.status(400).json({ message: "Invalid file type" });
+//     }
+
+//     let file = await Model.findById(fileId);
+//     if (!file) return res.status(404).json({ message: "File not found" });
+
+//     switch (action) {
+//       case "delete":
+//         await Model.findByIdAndDelete(fileId);
+//         return res.status(200).json({ message: "File deleted successfully" });
+
+//       case "rename":
+//         file.name = newName;
+//         await file.save();
+//         return res.status(200).json({ message: "File renamed successfully" });
+
+//       case "copy":
+//         const copiedFile = new Model({ ...file.toObject(), _id: undefined });
+//         await copiedFile.save();
+//         return res.status(200).json({ message: "File copied successfully" });
+
+//       case "move":
+//         file.folderId = destinationFolderId;
+//         await file.save();
+//         return res.status(200).json({ message: "File moved successfully" });
+
+//       case "duplicate":
+//         const duplicateFile = new Model({
+//           ...file.toObject(),
+//           _id: undefined,
+//           name: file.name + " (copy)",
+//         });
+//         await duplicateFile.save();
+//         return res
+//           .status(200)
+//           .json({ message: "File duplicated successfully" });
+
+//       default:
+//         return res.status(400).json({ message: "Invalid action" });
+//     }
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
 exports.fileAction = async (req, res) => {
   try {
-    const { fileId, fileType, action, newName, destinationFolderId } = req.body;
+    let { fileId, fileType, action, newName, destinationFolderId } = req.body;
+
+    // Check if fileId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+      return res.status(400).json({ message: "Invalid file ID format" });
+    }
+
+    // Convert fileId to ObjectId
+    fileId = new mongoose.Types.ObjectId(fileId);
 
     let Model;
     switch (fileType) {
@@ -88,7 +159,11 @@ exports.fileAction = async (req, res) => {
         return res.status(200).json({ message: "File deleted successfully" });
 
       case "rename":
-        file.name = newName;
+        if (fileType === "folder" || fileType === "note") {
+          file.name = newName;
+        } else {
+          file.filename = newName;
+        }
         await file.save();
         return res.status(200).json({ message: "File renamed successfully" });
 
@@ -98,7 +173,12 @@ exports.fileAction = async (req, res) => {
         return res.status(200).json({ message: "File copied successfully" });
 
       case "move":
-        file.folderId = destinationFolderId;
+        if (!mongoose.Types.ObjectId.isValid(destinationFolderId)) {
+          return res
+            .status(400)
+            .json({ message: "Invalid destination folder ID" });
+        }
+        file.parentFolder = new mongoose.Types.ObjectId(destinationFolderId);
         await file.save();
         return res.status(200).json({ message: "File moved successfully" });
 
@@ -106,7 +186,8 @@ exports.fileAction = async (req, res) => {
         const duplicateFile = new Model({
           ...file.toObject(),
           _id: undefined,
-          name: file.name + " (copy)",
+          filename: file.filename ? file.filename + " (copy)" : undefined,
+          name: file.name ? file.name + " (copy)" : undefined,
         });
         await duplicateFile.save();
         return res
