@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Folder = require("../models/folderModel");
 const Note = require("../models/noteModel");
 const Image = require("../models/imageModel");
