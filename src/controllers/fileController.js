@@ -25,7 +25,7 @@ exports.getUserFiles = async (req, res) => {
   }
 };
 
-//recent file api
+//recent upoladed file show api
 exports.getRecentFiles = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -360,10 +360,16 @@ exports.lockFile = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
+//unlock API
 exports.unlockFile = async (req, res) => {
   try {
-    const { fileId, fileType, password } = req.body;
+    let { fileId, fileType, password } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+      return res.status(400).json({ message: "Invalid file ID format" });
+    }
+
+    fileId = new mongoose.Types.ObjectId(fileId);
 
     let Model;
     switch (fileType) {
@@ -386,13 +392,11 @@ exports.unlockFile = async (req, res) => {
     let file = await Model.findById(fileId);
     if (!file) return res.status(404).json({ message: "File not found" });
 
-    const isMatch = await bcrypt.compare(password, file.lockPassword);
-    if (!isMatch)
+    // Password Check Logic
+    const isMatch = await bcrypt.compare(password, file.password);
+    if (!isMatch) {
       return res.status(401).json({ message: "Incorrect password" });
-
-    file.isLocked = false;
-    file.lockPassword = null;
-    await file.save();
+    }
 
     res.status(200).json({ message: "File unlocked successfully" });
   } catch (error) {
