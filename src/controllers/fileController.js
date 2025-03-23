@@ -57,152 +57,6 @@ exports.getRecentFiles = async (req, res) => {
   }
 };
 
-//File Action API (Delete, Copy, Rename, Move, Duplicate)
-// exports.fileAction = async (req, res) => {
-//   try {
-//     const { fileId, fileType, action, newName, destinationFolderId } = req.body;
-
-//     let Model;
-//     switch (fileType) {
-//       case "folder":
-//         Model = Folder;
-//         break;
-//       case "note":
-//         Model = Note;
-//         break;
-//       case "image":
-//         Model = Image;
-//         break;
-//       case "pdf":
-//         Model = Pdf;
-//         break;
-//       default:
-//         return res.status(400).json({ message: "Invalid file type" });
-//     }
-
-//     let file = await Model.findById(fileId);
-//     if (!file) return res.status(404).json({ message: "File not found" });
-
-//     switch (action) {
-//       case "delete":
-//         await Model.findByIdAndDelete(fileId);
-//         return res.status(200).json({ message: "File deleted successfully" });
-
-//       case "rename":
-//         file.name = newName;
-//         await file.save();
-//         return res.status(200).json({ message: "File renamed successfully" });
-
-//       case "copy":
-//         const copiedFile = new Model({ ...file.toObject(), _id: undefined });
-//         await copiedFile.save();
-//         return res.status(200).json({ message: "File copied successfully" });
-
-//       case "move":
-//         file.folderId = destinationFolderId;
-//         await file.save();
-//         return res.status(200).json({ message: "File moved successfully" });
-
-//       case "duplicate":
-//         const duplicateFile = new Model({
-//           ...file.toObject(),
-//           _id: undefined,
-//           name: file.name + " (copy)",
-//         });
-//         await duplicateFile.save();
-//         return res
-//           .status(200)
-//           .json({ message: "File duplicated successfully" });
-
-//       default:
-//         return res.status(400).json({ message: "Invalid action" });
-//     }
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
-// exports.fileAction = async (req, res) => {
-//   try {
-//     let { fileId, fileType, action, newName, destinationFolderId } = req.body;
-
-//     // Check if fileId is a valid ObjectId
-//     if (!mongoose.Types.ObjectId.isValid(fileId)) {
-//       return res.status(400).json({ message: "Invalid file ID format" });
-//     }
-
-//     // Convert fileId to ObjectId
-//     fileId = new mongoose.Types.ObjectId(fileId);
-
-//     let Model;
-//     switch (fileType) {
-//       case "folder":
-//         Model = Folder;
-//         break;
-//       case "note":
-//         Model = Note;
-//         break;
-//       case "image":
-//         Model = Image;
-//         break;
-//       case "pdf":
-//         Model = Pdf;
-//         break;
-//       default:
-//         return res.status(400).json({ message: "Invalid file type" });
-//     }
-
-//     let file = await Model.findById(fileId);
-//     if (!file) return res.status(404).json({ message: "File not found" });
-
-//     switch (action) {
-//       case "delete":
-//         await Model.findByIdAndDelete(fileId);
-//         return res.status(200).json({ message: "File deleted successfully" });
-
-//       case "rename":
-//         if (fileType === "folder" || fileType === "note") {
-//           file.name = newName;
-//         } else {
-//           file.filename = newName;
-//         }
-//         await file.save();
-//         return res.status(200).json({ message: "File renamed successfully" });
-
-//       case "copy":
-//         const copiedFile = new Model({ ...file.toObject(), _id: undefined });
-//         await copiedFile.save();
-//         return res.status(200).json({ message: "File copied successfully" });
-
-//       case "move":
-//         if (!mongoose.Types.ObjectId.isValid(destinationFolderId)) {
-//           return res
-//             .status(400)
-//             .json({ message: "Invalid destination folder ID" });
-//         }
-//         file.parentFolder = new mongoose.Types.ObjectId(destinationFolderId);
-//         await file.save();
-//         return res.status(200).json({ message: "File moved successfully" });
-
-//       case "duplicate":
-//         const duplicateFile = new Model({
-//           ...file.toObject(),
-//           _id: undefined,
-//           filename: file.filename ? file.filename + " (copy)" : undefined,
-//           name: file.name ? file.name + " (copy)" : undefined,
-//         });
-//         await duplicateFile.save();
-//         return res
-//           .status(200)
-//           .json({ message: "File duplicated successfully" });
-
-//       default:
-//         return res.status(400).json({ message: "Invalid action" });
-//     }
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
-
 exports.fileAction = async (req, res) => {
   try {
     let { fileId, fileType, action, newName, destinationFolderId } = req.body;
@@ -363,9 +217,12 @@ exports.lockFile = async (req, res) => {
     if (!file) return res.status(404).json({ message: "File not found" });
 
     // Save PIN directly
+    console.log("Lock PIN:", lockPin);
     file.isLocked = true;
     file.lockPin = lockPin; // Save the 4-digit PIN directly
+    console.log("File before save:", file);
     await file.save();
+    console.log("File after save:", file);
 
     res.status(200).json({ message: "File locked successfully" });
   } catch (error) {
@@ -427,6 +284,93 @@ exports.unlockFile = async (req, res) => {
     await file.save();
 
     res.status(200).json({ message: "File unlocked successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// // Get Files by Date API
+// exports.getFilesByDate = async (req, res) => {
+//   try {
+//     let { date } = req.query;
+
+//     if (!date) {
+//       return res.status(400).json({ message: "Date is required" });
+//     }
+
+//     // Start & End Time of Selected Date
+//     const startDate = new Date(date);
+//     startDate.setHours(0, 0, 0, 0); // 00:00 AM
+//     const endDate = new Date(date);
+//     endDate.setHours(23, 59, 59, 999); // 11:59 PM
+
+//     // Fetch files created within the selected date range
+//     const folders = await Folder.find({
+//       createdAt: { $gte: startDate, $lte: endDate },
+//     });
+//     const notes = await Note.find({
+//       createdAt: { $gte: startDate, $lte: endDate },
+//     });
+//     const images = await Image.find({
+//       createdAt: { $gte: startDate, $lte: endDate },
+//     });
+//     const pdfs = await Pdf.find({
+//       createdAt: { $gte: startDate, $lte: endDate },
+//     });
+
+//     // Combine all results
+//     const allFiles = [...folders, ...notes, ...images, ...pdfs];
+
+//     res.status(200).json({
+//       message: "Files retrieved successfully",
+//       data: allFiles,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
+
+// Get Files by Date API (Only for Logged-in Users)
+exports.getFilesByDate = async (req, res) => {
+  try {
+    let { date } = req.query;
+    const userId = req.user.id; // Logged-in User ID from  AuthMiddleware
+
+    if (!date) {
+      return res.status(400).json({ message: "Date is required" });
+    }
+
+    // Start & End Time of Selected Date
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0); // 00:00 AM
+    const endDate = new Date(date);
+    endDate.setHours(23, 59, 59, 999); // 11:59 PM
+
+    // Fetch only the logged-in user's files
+    const folders = await Folder.find({
+      userId,
+      createdAt: { $gte: startDate, $lte: endDate },
+    });
+    const notes = await Note.find({
+      userId,
+      createdAt: { $gte: startDate, $lte: endDate },
+    });
+    const images = await Image.find({
+      userId,
+      createdAt: { $gte: startDate, $lte: endDate },
+    });
+    const pdfs = await Pdf.find({
+      userId,
+      createdAt: { $gte: startDate, $lte: endDate },
+    });
+
+    // Combine all results
+    const allFiles = [...folders, ...notes, ...images, ...pdfs];
+
+    res.status(200).json({
+      message: "Files retrieved successfully",
+      data: allFiles,
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
