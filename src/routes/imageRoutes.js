@@ -2,7 +2,11 @@ const express = require("express");
 const router = express.Router();
 const upload = require("../utils/multerConfig"); // Multer middleware
 const authMiddleware = require("../middleware/authMiddleware"); // JWT middleware
-const { importImage } = require("../controllers/imageController");
+const {
+  importImage,
+  getAllImages,
+  deleteImage,
+} = require("../controllers/imageController");
 
 // Image Upload Route (Authenticated User Only)
 router.post(
@@ -11,5 +15,11 @@ router.post(
   upload.single("image"),
   importImage
 );
+
+// Get All Images API
+router.get("/images", authMiddleware, getAllImages);
+
+// Delete Image API
+router.delete("/images/:id", authMiddleware, deleteImage);
 
 module.exports = router;
