@@ -11,7 +11,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 // Note Create Route (POST /api/notes)
 router.post("/", authMiddleware, createNote);
 // Get All Notes Route (GET /api/notes)
-router.get("/", authMiddleware, getAllNotes);
+router.get("/", getAllNotes);
 // Update Note Route (PUT /api/notes/:id)
 router.put("/:id", authMiddleware, updateNote);
 // Delete Note Route (DELETE /api/notes/:id)

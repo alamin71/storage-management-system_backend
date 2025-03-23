@@ -24,15 +24,27 @@ exports.createNote = async (req, res) => {
   }
 };
 
-// Get All Notes (GET /api/notes)
+// Get All Notes (GET /api/notes) //with middleware
+// exports.getAllNotes = async (req, res) => {
+//   try {
+//     const notes = await Note.find({ user: req.user.id }).sort({
+//       createdAt: -1,
+//     });
+
+//     res.status(200).json({
+//       message: "Notes fetched successfully",
+//       notes,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Internal Server Error", error });
+//   }
+// };
+// get Get All Notes API without middleware
 exports.getAllNotes = async (req, res) => {
   try {
-    const notes = await Note.find({ user: req.user.id }).sort({
-      createdAt: -1,
-    });
+    const notes = await Note.find();
 
     res.status(200).json({
-      message: "Notes fetched successfully",
       notes,
     });
   } catch (error) {

@@ -8,6 +8,6 @@ const authMiddleware = require("../middleware/authMiddleware");
 const router = express.Router();
 
 router.post("/create", authMiddleware, createFolder);
-router.get("/", authMiddleware, getUserFolders);
+router.get("/", getUserFolders);
 
 module.exports = router;
