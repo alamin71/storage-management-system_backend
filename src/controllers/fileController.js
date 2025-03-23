@@ -3,6 +3,7 @@ const Folder = require("../models/folderModel");
 const Note = require("../models/noteModel");
 const Image = require("../models/imageModel");
 const Pdf = require("../models/pdfModel");
+const bcrypt = require("bcryptjs");
 
 exports.getUserFiles = async (req, res) => {
   try {
@@ -319,6 +320,81 @@ exports.getFavoriteFiles = async (req, res) => {
         ...favoritePdfs,
       ],
     });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+//Lock API
+exports.lockFile = async (req, res) => {
+  try {
+    const { fileId, fileType, password } = req.body;
+
+    let Model;
+    switch (fileType) {
+      case "folder":
+        Model = Folder;
+        break;
+      case "note":
+        Model = Note;
+        break;
+      case "image":
+        Model = Image;
+        break;
+      case "pdf":
+        Model = Pdf;
+        break;
+      default:
+        return res.status(400).json({ message: "Invalid file type" });
+    }
+
+    let file = await Model.findById(fileId);
+    if (!file) return res.status(404).json({ message: "File not found" });
+
+    file.isLocked = true;
+    file.lockPassword = password;
+    await file.save();
+
+    res.status(200).json({ message: "File locked successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.unlockFile = async (req, res) => {
+  try {
+    const { fileId, fileType, password } = req.body;
+
+    let Model;
+    switch (fileType) {
+      case "folder":
+        Model = Folder;
+        break;
+      case "note":
+        Model = Note;
+        break;
+      case "image":
+        Model = Image;
+        break;
+      case "pdf":
+        Model = Pdf;
+        break;
+      default:
+        return res.status(400).json({ message: "Invalid file type" });
+    }
+
+    let file = await Model.findById(fileId);
+    if (!file) return res.status(404).json({ message: "File not found" });
+
+    const isMatch = await bcrypt.compare(password, file.lockPassword);
+    if (!isMatch)
+      return res.status(401).json({ message: "Incorrect password" });
+
+    file.isLocked = false;
+    file.lockPassword = null;
+    await file.save();
+
+    res.status(200).json({ message: "File unlocked successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
