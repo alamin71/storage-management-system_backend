@@ -43,48 +43,36 @@
 //   }
 // };
 
-const cloudinary = require("../utils/cloudinaryConfig"); // Cloudinary configuration
-const stream = require("stream"); // Node stream library to handle buffer upload
-const Image = require("../models/imageModel"); // Image model for MongoDB
+const cloudinary = require("cloudinary").v2;
+const Image = require("../models/imageModel");
 
 exports.importImage = async (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ message: "No image file uploaded!" }); // No file uploaded
+    return res.status(400).json({ message: "No image file uploaded!" });
   }
 
-  const bufferStream = new stream.PassThrough(); // Create a buffer stream
-  bufferStream.end(req.file.buffer); // End the stream with the file buffer
-
   try {
-    // Cloudinary stream upload with buffer data
-    cloudinary.uploader
-      .upload_stream(
-        { resource_type: "auto" }, // Auto detect image type
-        async (error, result) => {
-          if (error) {
-            console.error("Error uploading image:", error);
-            return res.status(500).json({ message: "Image upload failed." }); // Internal server error
-          }
+    // Cloudinary te image upload with buffer
+    const result = await cloudinary.uploader.upload(req.file.buffer, {
+      resource_type: "auto", // Automatically detect the image type (JPG, PNG, etc.)
+    });
 
-          // Save image details in the database
-          const newImage = new Image({
-            userId: req.user.id, // User ID (auth middleware er dara asbe)
-            cloudinaryId: result.public_id, // Cloudinary image ID
-            url: result.secure_url, // Cloudinary URL for the uploaded image
-            filename: req.file.originalname, // Filename
-            mimetype: req.file.mimetype, // MIME type of the file
-            size: req.file.size, // File size
-          });
+    // Image details save to the database
+    const newImage = new Image({
+      userId: req.user.id,
+      cloudinaryId: result.public_id,
+      url: result.secure_url,
+      filename: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    });
 
-          await newImage.save(); // Save image to database
+    await newImage.save();
 
-          res.status(200).json({
-            message: "Image uploaded successfully!",
-            image: newImage, // Return the image data
-          });
-        }
-      )
-      .end(bufferStream); // Upload the image using the buffer stream
+    res.status(200).json({
+      message: "Image uploaded successfully!",
+      image: newImage,
+    });
   } catch (error) {
     console.error("Error uploading image:", error);
     res.status(500).json({ message: "Image upload failed." });
