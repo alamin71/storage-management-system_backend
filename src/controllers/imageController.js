@@ -42,8 +42,7 @@
 //     res.status(500).json({ message: "Failed to retrieve images." });
 //   }
 // };
-
-const cloudinary = require("cloudinary").v2;
+const cloudinary = require("../utils/cloudinaryConfig");
 const Image = require("../models/imageModel");
 
 exports.importImage = async (req, res) => {
