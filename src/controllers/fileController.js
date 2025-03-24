@@ -289,47 +289,6 @@ exports.unlockFile = async (req, res) => {
   }
 };
 
-// // Get Files by Date API
-// exports.getFilesByDate = async (req, res) => {
-//   try {
-//     let { date } = req.query;
-
-//     if (!date) {
-//       return res.status(400).json({ message: "Date is required" });
-//     }
-
-//     // Start & End Time of Selected Date
-//     const startDate = new Date(date);
-//     startDate.setHours(0, 0, 0, 0); // 00:00 AM
-//     const endDate = new Date(date);
-//     endDate.setHours(23, 59, 59, 999); // 11:59 PM
-
-//     // Fetch files created within the selected date range
-//     const folders = await Folder.find({
-//       createdAt: { $gte: startDate, $lte: endDate },
-//     });
-//     const notes = await Note.find({
-//       createdAt: { $gte: startDate, $lte: endDate },
-//     });
-//     const images = await Image.find({
-//       createdAt: { $gte: startDate, $lte: endDate },
-//     });
-//     const pdfs = await Pdf.find({
-//       createdAt: { $gte: startDate, $lte: endDate },
-//     });
-
-//     // Combine all results
-//     const allFiles = [...folders, ...notes, ...images, ...pdfs];
-
-//     res.status(200).json({
-//       message: "Files retrieved successfully",
-//       data: allFiles,
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
-
 // Get Files by Date API (Only for Logged-in Users)
 exports.getFilesByDate = async (req, res) => {
   try {

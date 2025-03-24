@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const PDF = require("../models/pdfModel");
 
 // PDF Upload Function
@@ -23,5 +25,21 @@ exports.importPDF = async (req, res) => {
   } catch (error) {
     console.error("Error uploading PDF:", error);
     res.status(500).json({ message: "PDF upload failed." });
+  }
+};
+
+// Get All PDFs API
+exports.getAllPDFs = async (req, res) => {
+  try {
+    // only logged-in user's PDFs
+    const pdfs = await PDF.find({ userId: req.user.id });
+
+    res.status(200).json({
+      message: "PDFs retrieved successfully!",
+      pdfs, // All PDFs uploaded by the user
+    });
+  } catch (error) {
+    console.error("Error fetching PDFs:", error);
+    res.status(500).json({ message: "Failed to retrieve PDFs." });
   }
 };
