@@ -72,10 +72,6 @@ const imageSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    path: {
-      type: String,
-      required: true,
-    },
     mimetype: {
       type: String,
       required: true,
