@@ -17,7 +17,7 @@ router.post(
 );
 
 // Get All Images API
-router.get("/images", authMiddleware, getAllImages);
+router.get("/all-image", authMiddleware, getAllImages);
 
 // Delete Image API
 router.delete("/images/:id", authMiddleware, deleteImage);
