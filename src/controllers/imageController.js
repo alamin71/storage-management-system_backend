@@ -46,7 +46,7 @@
 const cloudinary = require("../utils/cloudinaryConfig"); // Cloudinary configuration import
 const Image = require("../models/imageModel");
 
-// Image Upload Function with Cloudinary
+// Image Upload Function with Cloudinary (using memory storage)
 exports.importImage = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No image file uploaded!" }); // No file uploaded
@@ -54,7 +54,9 @@ exports.importImage = async (req, res) => {
 
   try {
     // Cloudinary te image upload
-    const result = await cloudinary.uploader.upload(req.file.path);
+    const result = await cloudinary.uploader.upload(req.file.buffer, {
+      resource_type: "auto", // Auto-detect image type (JPG, PNG, etc.)
+    });
 
     // Image details database e save kora
     const newImage = new Image({
