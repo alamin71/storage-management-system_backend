@@ -38,6 +38,6 @@ router.post(
 router.get("/all-image", authMiddleware, getAllImages); // Fetch all images uploaded by the authenticated user
 
 // Delete Image by ID API (Authenticated User Only)
-router.delete("/images/:id", authMiddleware, deleteImage); // Delete image by ID from database and Cloudinary
+router.delete("/image/:id", authMiddleware, deleteImage); // Delete image by ID from database and Cloudinary
 
 module.exports = router;
