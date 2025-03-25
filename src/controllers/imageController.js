@@ -1,5 +1,6 @@
 const cloudinary = require("../utils/cloudinaryConfig");
 const Image = require("../models/imageModel");
+const uploadToCloudinary = require("../utils/cloudinaryUpload");
 
 exports.importImage = async (req, res) => {
   try {
@@ -11,27 +12,24 @@ exports.importImage = async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Convert Buffer to Base64
-    const base64Image = `data:${
-      req.file.mimetype
-    };base64,${req.file.buffer.toString("base64")}`;
-
-    // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(base64Image, {
-      folder: "user_uploads",
-    });
+    // Cloudinary te upload korbo (resource_type 'image' for images)
+    const result = await uploadToCloudinary(
+      req.file.buffer,
+      "user_uploads",
+      "image"
+    );
 
     // New Image Object for save db
     const newImage = new Image({
       userId: req.user.id, // User ID save
-      cloudinaryId: result.public_id, // Cloudinary এর unique ID
+      cloudinaryId: result.public_id, // Cloudinary unique ID
       url: result.secure_url, // Cloudinary image URL
-      filename: req.file.originalname, // get Filename from multer
+      filename: req.file.originalname, // Filename from multer
       mimetype: req.file.mimetype, // File type
       size: req.file.size, // File size in bytes
     });
 
-    await newImage.save(); // save db
+    await newImage.save(); // save to database
 
     return res.status(200).json({
       message: "Image uploaded & saved successfully",
@@ -42,6 +40,7 @@ exports.importImage = async (req, res) => {
     res.status(500).json({ error: "Failed to upload image" });
   }
 };
+
 // Get All Images API
 exports.getAllImages = async (req, res) => {
   try {
