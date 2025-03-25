@@ -1,76 +1,6 @@
-// const Image = require("../models/imageModel");
-
-// // Image Upload Function
-// exports.importImage = async (req, res) => {
-//   if (!req.file) {
-//     return res.status(400).json({ message: "No image file uploaded!" });
-//   }
-
-//   try {
-//     const newImage = new Image({
-//       userId: req.user.id, // userId from middleware
-//       filename: req.file.filename,
-//       path: req.file.path,
-//       mimetype: req.file.mimetype,
-//       size: req.file.size,
-//     });
-
-//     await newImage.save(); // Database- save
-
-//     res.status(200).json({
-//       message: "Image uploaded successfully!",
-//       image: newImage,
-//     });
-//   } catch (error) {
-//     console.error("Error uploading image:", error);
-//     res.status(500).json({ message: "Image upload failed." });
-//   }
-// };
-
-// // Get All Images API
-// exports.getAllImages = async (req, res) => {
-//   try {
-//     // only login user
-//     const images = await Image.find({ userId: req.user.id });
-
-//     res.status(200).json({
-//       message: "Images retrieved successfully!",
-//       images, // User uploaded all images
-//     });
-//   } catch (error) {
-//     console.error("Error fetching images:", error);
-//     res.status(500).json({ message: "Failed to retrieve images." });
-//   }
-// };
-
 const cloudinary = require("../utils/cloudinaryConfig");
 const Image = require("../models/imageModel");
 
-// exports.importImage = async (req, res) => {
-//   try {
-//     if (!req.file) {
-//       return res.status(400).json({ error: "No file uploaded" });
-//     }
-
-//     // Convert Buffer to Base64 DataURI
-//     const base64Image = `data:${
-//       req.file.mimetype
-//     };base64,${req.file.buffer.toString("base64")}`;
-
-//     // Upload to Cloudinary
-//     const result = await cloudinary.uploader.upload(base64Image, {
-//       folder: "user_uploads",
-//     });
-
-//     return res.status(200).json({
-//       message: "Image uploaded successfully",
-//       url: result.secure_url,
-//     });
-//   } catch (error) {
-//     console.error("Error uploading image:", error);
-//     res.status(500).json({ error: "Failed to upload image" });
-//   }
-// };
 exports.importImage = async (req, res) => {
   try {
     if (!req.file) {
@@ -91,17 +21,17 @@ exports.importImage = async (req, res) => {
       folder: "user_uploads",
     });
 
-    // নতুন Image Object তৈরি করে ডাটাবেজে সংরক্ষণ
+    // New Image Object for save db
     const newImage = new Image({
-      userId: req.user.id, // **User ID সংরক্ষণ করুন**
+      userId: req.user.id, // User ID save
       cloudinaryId: result.public_id, // Cloudinary এর unique ID
       url: result.secure_url, // Cloudinary image URL
-      filename: req.file.originalname, // Filename multer থেকে নিবো
+      filename: req.file.originalname, // get Filename from multer
       mimetype: req.file.mimetype, // File type
       size: req.file.size, // File size in bytes
     });
 
-    await newImage.save(); // ডাটাবেজে save করুন
+    await newImage.save(); // save db
 
     return res.status(200).json({
       message: "Image uploaded & saved successfully",
@@ -130,19 +60,19 @@ exports.getAllImages = async (req, res) => {
 
 // Delete Image API with Cloudinary
 exports.deleteImage = async (req, res) => {
-  const { id } = req.params; // `id` হিসেবে ধরতে হবে
+  const { id } = req.params;
 
   try {
-    const image = await Image.findById(id); // Database থেকে image খুঁজে বের করা
+    const image = await Image.findById(id); // image find to Database
 
     if (!image) {
       return res.status(404).json({ message: "Image not found!" });
     }
 
-    // Cloudinary থেকে image মুছতে হবে
+    // Delete from Cloudinary
     await cloudinary.uploader.destroy(image.cloudinaryId);
 
-    // Database থেকে image delete করা
+    // Delete from Database
     await image.deleteOne();
 
     res.status(200).json({ message: "Image deleted successfully!" });
