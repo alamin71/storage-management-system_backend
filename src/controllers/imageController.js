@@ -46,35 +46,28 @@ const cloudinary = require("../utils/cloudinaryConfig");
 const Image = require("../models/imageModel");
 
 exports.importImage = async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: "No image file uploaded!" });
-  }
-
   try {
-    // Cloudinary te image upload with buffer
-    const result = await cloudinary.uploader.upload(req.file.buffer, {
-      resource_type: "auto", // Automatically detect the image type (JPG, PNG, etc.)
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // Convert Buffer to Base64 DataURI
+    const base64Image = `data:${
+      req.file.mimetype
+    };base64,${req.file.buffer.toString("base64")}`;
+
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(base64Image, {
+      folder: "user_uploads",
     });
 
-    // Image details save to the database
-    const newImage = new Image({
-      userId: req.user.id,
-      cloudinaryId: result.public_id,
+    return res.status(200).json({
+      message: "Image uploaded successfully",
       url: result.secure_url,
-      filename: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-    });
-
-    await newImage.save();
-
-    res.status(200).json({
-      message: "Image uploaded successfully!",
-      image: newImage,
     });
   } catch (error) {
     console.error("Error uploading image:", error);
-    res.status(500).json({ message: "Image upload failed." });
+    res.status(500).json({ error: "Failed to upload image" });
   }
 };
 
