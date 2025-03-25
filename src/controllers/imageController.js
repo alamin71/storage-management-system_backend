@@ -46,13 +46,42 @@
 const cloudinary = require("../utils/cloudinaryConfig");
 const Image = require("../models/imageModel");
 
+// exports.importImage = async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ error: "No file uploaded" });
+//     }
+
+//     // Convert Buffer to Base64 DataURI
+//     const base64Image = `data:${
+//       req.file.mimetype
+//     };base64,${req.file.buffer.toString("base64")}`;
+
+//     // Upload to Cloudinary
+//     const result = await cloudinary.uploader.upload(base64Image, {
+//       folder: "user_uploads",
+//     });
+
+//     return res.status(200).json({
+//       message: "Image uploaded successfully",
+//       url: result.secure_url,
+//     });
+//   } catch (error) {
+//     console.error("Error uploading image:", error);
+//     res.status(500).json({ error: "Failed to upload image" });
+//   }
+// };
 exports.importImage = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // Convert Buffer to Base64 DataURI
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Convert Buffer to Base64
     const base64Image = `data:${
       req.file.mimetype
     };base64,${req.file.buffer.toString("base64")}`;
@@ -62,16 +91,27 @@ exports.importImage = async (req, res) => {
       folder: "user_uploads",
     });
 
+    // নতুন Image Object তৈরি করে ডাটাবেজে সংরক্ষণ
+    const newImage = new Image({
+      userId: req.user.id, // **User ID সংরক্ষণ করুন**
+      cloudinaryId: result.public_id, // Cloudinary এর unique ID
+      url: result.secure_url, // Cloudinary image URL
+      filename: req.file.originalname, // Filename multer থেকে নিবো
+      mimetype: req.file.mimetype, // File type
+      size: req.file.size, // File size in bytes
+    });
+
+    await newImage.save(); // ডাটাবেজে save করুন
+
     return res.status(200).json({
-      message: "Image uploaded successfully",
-      url: result.secure_url,
+      message: "Image uploaded & saved successfully",
+      image: newImage,
     });
   } catch (error) {
     console.error("Error uploading image:", error);
     res.status(500).json({ error: "Failed to upload image" });
   }
 };
-
 // Get All Images API
 exports.getAllImages = async (req, res) => {
   try {
