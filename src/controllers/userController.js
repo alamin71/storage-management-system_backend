@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
+const cloudinary = require("../utils/cloudinaryConfig");
 
 // Email validation function
 const validateEmail = (email) => {
@@ -81,14 +82,32 @@ const loginUser = async (req, res) => {
 };
 
 // Edit Profile
+const uploadProfileImage = async (file) => {
+  try {
+    // Cloudinary te image upload
+    const result = await cloudinary.uploader.upload(file.buffer, {
+      folder: "profile_images", // Folder name in Cloudinary (optional)
+      public_id: `user_${Date.now()}`, // Public ID for image (optional)
+    });
+    return result.secure_url; // Return image URL
+  } catch (error) {
+    throw new Error("Cloudinary upload failed: " + error.message);
+  }
+};
+
 const editProfile = async (req, res) => {
   try {
     const userId = req.user.id; // user id from Middleware
-    const { name, profileImage } = req.body;
+    const { name } = req.body;
+
+    let profileImageUrl = req.body.profileImage; // If already provided in the body
+    if (req.file) {
+      profileImageUrl = await uploadProfileImage(req.file); // Upload image to Cloudinary and get URL
+    }
 
     const user = await User.findByIdAndUpdate(
       userId,
-      { name, profileImage },
+      { name, profileImage: profileImageUrl },
       { new: true, runValidators: true }
     );
 
@@ -101,7 +120,7 @@ const editProfile = async (req, res) => {
       user,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 

@@ -1,4 +1,5 @@
 const express = require("express");
+const upload = require("../utils/editProfileMulterConfig"); // Import multer config
 const {
   registerUser,
   loginUser,
@@ -20,8 +21,13 @@ router.post("/register", registerUser);
 // User Login
 router.post("/login", loginUser);
 
-//edit profile
-router.put("/profile", authMiddleware, editProfile);
+// Edit profile with image upload (memory storage)
+router.put(
+  "/edit-profile",
+  authMiddleware,
+  upload.single("profileImage"),
+  editProfile
+);
 
 //change password
 router.put("/change-password", authMiddleware, changePassword);
