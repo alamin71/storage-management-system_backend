@@ -46,47 +46,21 @@
 const cloudinary = require("../utils/cloudinaryConfig");
 const Image = require("../models/imageModel");
 
-// exports.importImage = async (req, res) => {
-//   try {
-//     if (!req.file) {
-//       return res.status(400).json({ error: "No file uploaded" });
-//     }
-
-//     // Convert Buffer to Base64 DataURI
-//     const base64Image = `data:${
-//       req.file.mimetype
-//     };base64,${req.file.buffer.toString("base64")}`;
-
-//     // Upload to Cloudinary
-//     const result = await cloudinary.uploader.upload(base64Image, {
-//       folder: "user_uploads",
-//     });
-
-//     return res.status(200).json({
-//       message: "Image uploaded successfully",
-//       url: result.secure_url,
-//     });
-//   } catch (error) {
-//     console.error("Error uploading image:", error);
-//     res.status(500).json({ error: "Failed to upload image" });
-//   }
-// };
-
-const fs = require("fs");
-
 exports.importImage = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // Cloudinary তে আপলোড করা
-    const result = await cloudinary.uploader.upload(req.file.path, {
+    // Convert Buffer to Base64 DataURI
+    const base64Image = `data:${
+      req.file.mimetype
+    };base64,${req.file.buffer.toString("base64")}`;
+
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(base64Image, {
       folder: "user_uploads",
     });
-
-    // লোকাল থেকে ফাইল ডিলিট করা (Cloudinary তে আপলোডের পর আর দরকার নেই)
-    fs.unlinkSync(req.file.path);
 
     return res.status(200).json({
       message: "Image uploaded successfully",
@@ -97,6 +71,7 @@ exports.importImage = async (req, res) => {
     res.status(500).json({ error: "Failed to upload image" });
   }
 };
+
 // Get All Images API
 exports.getAllImages = async (req, res) => {
   try {
