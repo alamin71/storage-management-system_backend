@@ -1,18 +1,9 @@
 const multer = require("multer");
-const path = require("path");
 
-// File storage configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname)); //make Unique filename
-  },
-});
+// File storage configuration (memory storage)
+const storage = multer.memoryStorage(); // Store file in memory instead of disk
 
-// File filter (only pdf Allow)
+// File filter (only pdf allowed)
 const fileFilter = (req, file, cb) => {
   if (file.mimetype === "application/pdf") {
     cb(null, true);
@@ -23,7 +14,7 @@ const fileFilter = (req, file, cb) => {
 
 // Multer middleware
 const uploadPDF = multer({
-  storage: storage,
+  storage: storage, // Using memory storage instead of disk storage
   fileFilter: fileFilter,
   limits: { fileSize: 20 * 1024 * 1024 }, // 20MB max size limit
 });
