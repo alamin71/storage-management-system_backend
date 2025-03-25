@@ -1,66 +1,34 @@
-// const fs = require("fs");
-// const path = require("path");
-// const PDF = require("../models/pdfModel");
-
-// // PDF Upload Function
-// exports.importPDF = async (req, res) => {
-//   if (!req.file) {
-//     return res.status(400).json({ message: "No PDF file uploaded!" });
-//   }
-
-//   try {
-//     const newPDF = new PDF({
-//       userId: req.user.id, // userId from middleware
-//       filename: req.file.filename,
-//       path: req.file.path,
-//       size: req.file.size,
-//     });
-
-//     await newPDF.save(); // save to database
-
-//     res.status(200).json({
-//       message: "PDF uploaded successfully!",
-//       pdf: newPDF,
-//     });
-//   } catch (error) {
-//     console.error("Error uploading PDF:", error);
-//     res.status(500).json({ message: "PDF upload failed." });
-//   }
-// };
-
-// // Get All PDFs API
-// exports.getAllPDFs = async (req, res) => {
-//   try {
-//     // only logged-in user's PDFs
-//     const pdfs = await PDF.find({ userId: req.user.id });
-
-//     res.status(200).json({
-//       message: "PDFs retrieved successfully!",
-//       pdfs, // All PDFs uploaded by the user
-//     });
-//   } catch (error) {
-//     console.error("Error fetching PDFs:", error);
-//     res.status(500).json({ message: "Failed to retrieve PDFs." });
-//   }
-// };
 const cloudinary = require("../utils/cloudinaryConfig");
 const PDF = require("../models/pdfModel");
 
-// PDF Upload Function
 exports.importPDF = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No PDF file uploaded!" });
   }
 
   try {
-    // Upload PDF to Cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      resource_type: "raw",
-      folder: "user_pdfs",
+    // Convert buffer to base64 string for Cloudinary upload
+    const fileBase64 = req.file.buffer.toString("base64");
+
+    // Upload PDF to Cloudinary (Use 'upload_stream' instead of 'upload')
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream(
+          {
+            resource_type: "raw", // For PDF, Cloudinary resource type should be raw
+            folder: "user_pdfs",
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        )
+        .end(req.file.buffer);
     });
 
+    // Save PDF details in the database
     const newPDF = new PDF({
-      userId: req.user.id, // userId from middleware
+      userId: req.user.id, // User ID from middleware
       cloudinaryId: result.public_id, // Cloudinary unique ID
       url: result.secure_url, // Cloudinary file URL
       filename: req.file.originalname,
@@ -68,7 +36,7 @@ exports.importPDF = async (req, res) => {
       size: req.file.size,
     });
 
-    await newPDF.save(); // save to database
+    await newPDF.save(); // Save to database
 
     res.status(200).json({
       message: "PDF uploaded successfully!",
