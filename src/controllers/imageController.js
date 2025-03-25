@@ -130,24 +130,24 @@ exports.getAllImages = async (req, res) => {
 
 // Delete Image API with Cloudinary
 exports.deleteImage = async (req, res) => {
-  const { imageId } = req.params; // Get image ID from request params
+  const { id } = req.params; // `id` হিসেবে ধরতে হবে
 
   try {
-    const image = await Image.findById(imageId); // Database theke image search kora
+    const image = await Image.findById(id); // Database থেকে image খুঁজে বের করা
 
     if (!image) {
-      return res.status(404).json({ message: "Image not found!" }); // If image not found
+      return res.status(404).json({ message: "Image not found!" });
     }
 
-    // Cloudinary theke image delete kora
+    // Cloudinary থেকে image মুছতে হবে
     await cloudinary.uploader.destroy(image.cloudinaryId);
 
-    // Database theke image remove kora
-    await image.remove();
+    // Database থেকে image delete করা
+    await image.deleteOne();
 
-    res.status(200).json({ message: "Image deleted successfully!" }); // Image delete success message
+    res.status(200).json({ message: "Image deleted successfully!" });
   } catch (error) {
-    console.error("Error deleting image:", error); // Error in deleting
-    res.status(500).json({ message: "Image deletion failed." }); // Internal server error
+    console.error("Error deleting image:", error);
+    res.status(500).json({ message: "Image deletion failed." });
   }
 };
