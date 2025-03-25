@@ -48,19 +48,45 @@
 
 // module.exports = upload;
 
+// const multer = require("multer");
+// const path = require("path");
+
+// // File storage configuration
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, "uploads/"); // লোকাল আপলোড ফোল্ডার
+//   },
+//   filename: (req, file, cb) => {
+//     cb(
+//       null,
+//       file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+//     );
+//   },
+// });
+
+// const upload = multer({ storage: storage });
+
+// module.exports = upload;
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 
-// File storage configuration
+// Ensure "uploads" folder exists
+const uploadDir = "uploads/";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Multer storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/"); // লোকাল আপলোড ফোল্ডার
+    console.log("Saving to:", uploadDir); // Debugging log
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    cb(
-      null,
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
-    );
+    const filename = "image-" + Date.now() + path.extname(file.originalname);
+    console.log("Generated filename:", filename); // Debugging log
+    cb(null, filename);
   },
 });
 
