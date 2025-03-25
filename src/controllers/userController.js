@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
 const cloudinary = require("../utils/cloudinaryConfig");
+const uploadToCloudinary = require("../utils/cloudinaryUpload");
 
 // Email validation function
 const validateEmail = (email) => {
@@ -82,27 +83,18 @@ const loginUser = async (req, res) => {
 };
 
 // Edit Profile
-const uploadProfileImage = async (file) => {
-  try {
-    // Cloudinary te image upload
-    const result = await cloudinary.uploader.upload(file.buffer, {
-      folder: "profile_images", // Folder name in Cloudinary (optional)
-      public_id: `user_${Date.now()}`, // Public ID for image (optional)
-    });
-    return result.secure_url; // Return image URL
-  } catch (error) {
-    throw new Error("Cloudinary upload failed: " + error.message);
-  }
-};
-
 const editProfile = async (req, res) => {
   try {
-    const userId = req.user.id; // user id from Middleware
+    const userId = req.user.id;
     const { name } = req.body;
 
-    let profileImageUrl = req.body.profileImage; // If already provided in the body
+    let profileImageUrl = req.body.profileImage; // Jodi user ager image rakhe
     if (req.file) {
-      profileImageUrl = await uploadProfileImage(req.file); // Upload image to Cloudinary and get URL
+      const result = await uploadToCloudinary(
+        req.file.buffer,
+        "profile_pictures"
+      );
+      profileImageUrl = result.secure_url;
     }
 
     const user = await User.findByIdAndUpdate(
@@ -115,10 +107,7 @@ const editProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({
-      message: "Profile updated successfully",
-      user,
-    });
+    res.status(200).json({ message: "Profile updated successfully", user });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
